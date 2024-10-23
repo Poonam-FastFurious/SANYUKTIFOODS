@@ -13,7 +13,7 @@ const initializeAdmin = asyncHandler(async (req, res) => {
       const adminuser = new Admin({
         username: "admin",
         password: "admin@1234",
-        email: "charansparshadmin@gmail.com",
+        email: "admin@gmail.com",
         profilePhoto:
           "https://themesbrand.com/velzon/html/master/assets/images/users/avatar-1.jpg",
       });
