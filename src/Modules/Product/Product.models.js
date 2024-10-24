@@ -43,10 +43,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    state: {
-      type: String,
-      trim: true,
-    },
+   
     subcategory: {
       type: String,
       trim: true, // Reference the Vendor model
@@ -66,18 +63,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    youtubeVideoLink: {
-      type: String,
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]{11}$/.test(
-            v
-          );
-        },
-        message: (props) => `${props.value} is not a valid YouTube URL`,
-      },
-    },
+   
     thumbnail: [
       {
         type: String,

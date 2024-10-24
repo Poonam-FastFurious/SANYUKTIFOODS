@@ -23,7 +23,6 @@ const addProduct = asyncHandler(async (req, res) => {
       sku,
       shortDescription,
       stocks,
-      youtubeVideoLink,
     } = req.body;
 
     // Validate required fields
@@ -50,13 +49,6 @@ const addProduct = asyncHandler(async (req, res) => {
         400,
         "SKU must be alphanumeric and follow the required format"
       );
-    }
-
-    // Validate YouTube video URL (basic validation)
-    const youtubeRegex =
-      /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-    if (youtubeVideoLink && !youtubeRegex.test(youtubeVideoLink)) {
-      throw new ApiError(400, "Invalid YouTube video URL");
     }
 
     // Check for existing product by SKU
@@ -115,8 +107,6 @@ const addProduct = asyncHandler(async (req, res) => {
       image: uploadedImage.url,
       thumbnail: uploadedThumbnails.map((thumbnail) => thumbnail.url),
       stocks: parsedStocks,
-      youtubeVideoLink,
-      banners: uploadedBanners.map((banner) => banner.url),
     });
 
     // Return successful response
