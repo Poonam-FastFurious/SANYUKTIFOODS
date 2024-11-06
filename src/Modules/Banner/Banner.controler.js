@@ -9,7 +9,7 @@ const uploadBanner = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Request body is missing or empty");
     }
 
-    const { title, details, link } = req.body;
+    const { title, details,type, link } = req.body;
 
     if (![title, details, link].every((field) => field?.trim())) {
       throw new ApiError("All fields are required");
@@ -29,6 +29,7 @@ const uploadBanner = asyncHandler(async (req, res) => {
       image: uploadedImage.url,
       title,
       details,
+      type,
       link,
     });
 
