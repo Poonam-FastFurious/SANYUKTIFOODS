@@ -4,8 +4,9 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { uploadOnCloudinary } from "../../utils/Cloudinary.js";
 import { Testimonial } from "./Testimonial.modal.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const createTestimonial = async (req, res) => {
+const addTestimonial = asyncHandler(async (req, res) => {
   try {
     if (!req.body) {
       throw new ApiError(400, "Request body is missing or empty");
@@ -13,23 +14,23 @@ const createTestimonial = async (req, res) => {
 
     const { name, message, rating, email } = req.body;
 
-    if (![name, message, email].every((field) => field?.trim()) || !rating) {
-      throw new ApiError(400, "Name, message, rating, and email are required");
+    if (![name, message, email].every((field) => field?.trim())) {
+      throw new ApiError(400, "Name, message, and email are required");
     }
 
-    const existingTestimonial = await Testimonial.findOne({ email });
-    if (existingTestimonial) {
-      throw new ApiError(409, "Testimonial from this email already exists");
+    if (rating < 1 || rating > 5) {
+      throw new ApiError(400, "Rating must be between 1 and 5");
     }
 
-    const imageLocalPath = req.files?.photo?.[0]?.path;
-    let photoUrl;
-    if (imageLocalPath) {
-      const image = await uploadOnCloudinary(imageLocalPath);
-      if (!image) {
-        throw new ApiError(400, "Failed to upload image");
-      }
-      photoUrl = image.url;
+    // Check if photoUrl file is provided
+    const imageLocalPath = req.files?.photoUrl?.[0]?.path;
+    if (!imageLocalPath) {
+      throw new Error("Photo file is required");
+    }
+
+    const uploadedImage = await uploadOnCloudinary(imageLocalPath);
+    if (!uploadedImage) {
+      throw new Error("Failed to upload photo");
     }
 
     const testimonial = await Testimonial.create({
@@ -37,34 +38,24 @@ const createTestimonial = async (req, res) => {
       message,
       rating,
       email,
-      photoUrl,
+      photoUrl: uploadedImage.url, // Saving URL in photoUrl field of the model
     });
 
-    const { _id: _, ...createdTestimonial } = testimonial.toObject();
-
-    return res
-      .status(201)
-      .json(
-        new ApiResponse(
-          200,
-          createdTestimonial,
-          "Testimonial created successfully"
-        )
-      );
+    return res.status(201).json({
+      success: true,
+      data: testimonial,
+      message: "Testimonial added successfully",
+    });
   } catch (error) {
-    console.error("Error during testimonial creation:", error);
+    console.error("Error during testimonial addition:", error);
 
-    if (error instanceof ApiError) {
-      return res
-        .status(error.statusCode)
-        .json({ success: false, message: error.message });
-    }
-
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
-};
+});
+
 const getAllTestimonials = async (req, res) => {
   try {
     const testimonials = await Testimonial.find();
@@ -80,8 +71,9 @@ const getAllTestimonials = async (req, res) => {
 
     // Mapping testimonials to remove _id and converting to plain JS objects
     const formattedTestimonials = testimonials.map((testimonial) => {
-      const { ...testimonialObj } = testimonial.toObject();
-      return testimonialObj;
+      const { photoUrl, name, message, rating, email, date, _id, ...rest } =
+        testimonial.toObject();
+      return { photoUrl, name, message, rating, email, date, _id, ...rest };
     });
 
     return res
@@ -128,4 +120,4 @@ const deleteTestimonial = async (req, res) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
-export { createTestimonial, getAllTestimonials, deleteTestimonial };
+export { addTestimonial, getAllTestimonials, deleteTestimonial };

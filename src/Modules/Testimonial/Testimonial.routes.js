@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { upload } from "../../middlewares/FileUpload.middlwares.js";
 import {
-  createTestimonial,
+  addTestimonial,
   deleteTestimonial,
   getAllTestimonials,
 } from "./Testimonial.controler.js";
@@ -14,7 +14,7 @@ router.route("/add").post(
       maxCount: 1,
     },
   ]),
-  createTestimonial
+  addTestimonial
 );
 router.route("/alltestimonial").get(getAllTestimonials);
 router.route("/delete").delete(deleteTestimonial);
