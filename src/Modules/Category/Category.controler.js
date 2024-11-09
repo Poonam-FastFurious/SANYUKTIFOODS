@@ -184,9 +184,9 @@ const getAllCategories = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "products", // Collection name for products
-        localField: "categoriesTitle",
-        foreignField: "categories",
-        as: "products",
+        localField: "categoriesTitle", // Category title in Category collection
+        foreignField: "categories", // Category title in Product collection
+        as: "products", // Output array for matched products
       },
     },
     {
@@ -196,7 +196,16 @@ const getAllCategories = asyncHandler(async (req, res) => {
     },
     {
       $project: {
-        products: 0, // Exclude products array if not needed in response
+        subcategories: 1,
+        productCount: 1,
+        categoriesTitle: 1,
+        image: 1,
+        status: 1,
+        isCollectionCategory: 1,
+        isHeaderCategory: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        products: { $slice: ["$products", 4] }, // Optionally limit to the first 5 products
       },
     },
   ]);
