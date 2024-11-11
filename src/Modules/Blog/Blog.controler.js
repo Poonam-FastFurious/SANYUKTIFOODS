@@ -139,16 +139,8 @@ const deleteBlog = asyncHandler(async (req, res) => {
 const editBlog = asyncHandler(async (req, res) => {
   try {
     const { id } = req.body; // Assuming ID is passed as a URL parameter
-    const {
-      title,
-      description,
-      content,
-      tags,
-      category,
-      author,
-      thumbnail,
-      image,
-    } = req.body;
+    const { title, description, content, tags, category, author, image } =
+      req.body;
 
     if (!id) {
       throw new ApiError(400, "Blog ID is required");
@@ -172,14 +164,18 @@ const editBlog = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Blog post not found");
     }
 
-    let updatedThumbnail = thumbnail; // Default to the provided thumbnail URL
+    let updatedThumbnails = existingBlogPost.thumbnail || []; // Default to existing thumbnails if any
     let updatedImage = image; // Default to the provided image URL
 
-    // Upload thumbnail image to Cloudinary if a local file path is provided
+    // Upload multiple thumbnail images to Cloudinary if files are provided
     if (req.files?.thumbnail) {
-      const thumbnailLocalPath = req.files.thumbnail[0].path;
-      const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-      updatedThumbnail = uploadedThumbnail.url;
+      const uploadedThumbnails = await Promise.all(
+        req.files.thumbnail.map(async (file) => {
+          const uploaded = await uploadOnCloudinary(file.path);
+          return uploaded.url; // Collect URLs
+        })
+      );
+      updatedThumbnails = uploadedThumbnails; // Set array of URLs as updatedThumbnails
     }
 
     // Upload main image to Cloudinary if a local file path is provided
@@ -196,7 +192,7 @@ const editBlog = asyncHandler(async (req, res) => {
         title,
         description,
         content,
-        thumbnail: updatedThumbnail,
+        thumbnail: updatedThumbnails, // Set multiple thumbnails
         image: updatedImage,
         tags: tags ? tags.split(",") : existingBlogPost.tags, // Update tags if provided
         category,
@@ -223,6 +219,7 @@ const editBlog = asyncHandler(async (req, res) => {
     }
   }
 });
+
 const getSingleBlog = asyncHandler(async (req, res) => {
   try {
     const { id } = req.query; // Assuming ID is passed as a URL parameter
